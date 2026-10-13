@@ -34,7 +34,7 @@ jobs:
 
     - name: Compile Sketch
       run: |
-        arduino-cli compile --fqbn esp32:esp32:esp32s3 tes/tes.ino --output-dir ./build
+        arduino-cli compile --fqbn esp32:esp32:esp32s3 tes layar/tes.ino --output-dir ./build
 
     - name: Upload Firmware Binary Artifact
       uses: actions/upload-artifact@v4
