@@ -1,40 +1,43 @@
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+name: Build Arduino Sketch
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64 // Ubah ke 32 jika menggunakan OLED 128x32
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
 
-// Deklarasi OLED (menggunakan I2C)
-#define OLED_RESET    -1 
-#define SCREEN_ADDRESS 0x3C // Alamat I2C umum (bisa 0x3D)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-void setup() {
-  Serial.begin(115200);
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-  // Inisialisasi I2C (SDA = GPIO 8, SCL = GPIO 9 - sesuaikan dengan board Anda jika perlu)
-   Wire.begin(40, 41); 
+    - name: Install Arduino CLI
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+        echo "$PWD/bin" >> $GITHUB_PATH
 
-  // Inisialisasi OLED SSD1306
-  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    Serial.println(F("SSD1306 alokasi gagal!"));
-    for(;;);
-  }
+    - name: Initialize Arduino CLI configuration
+      run: arduino-cli config init --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-  // Bersihkan buffer
-  display.clearDisplay();
+    - name: Install ESP32 Core
+      run: |
+        arduino-cli core update-index
+        arduino-cli core install esp32:esp32
 
-  // Konfigurasi Teks
-  display.setTextSize(2);          // Ukuran teks
-  display.setTextColor(SSD1306_WHITE); // Warna teks
-  display.setCursor(10, 25);       // Posisi kursor (X, Y)
-  display.println(F("Hello"));     // Teks yang ditampilkan
+    - name: Install Required Libraries
+      run: |
+        arduino-cli lib install "Adafruit SSD1306"
+        arduino-cli lib install "Adafruit GFX Library"
 
-  // Tampilkan ke layar
-  display.display();
-}
+    - name: Compile Sketch
+      run: |
+        arduino-cli compile --fqbn esp32:esp32:esp32s3 tes layar/tes.ino --output-dir ./build
 
-void loop() {
-  // Tidak ada proses berulang di sini
-}
+    - name: Upload Firmware Binary Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware-esp32s3
+        path: ./build/tes.ino.bin
