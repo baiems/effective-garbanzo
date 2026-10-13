@@ -34,10 +34,10 @@ jobs:
 
     - name: Compile Sketch
       run: |
-        arduino-cli compile --fqbn esp32:esp32:esp32s3 esp32_oled/esp32_oled.ino --output-dir ./build
+        arduino-cli compile --fqbn esp32:esp32:esp32s3 tes/tes.ino --output-dir ./build
 
     - name: Upload Firmware Binary Artifact
       uses: actions/upload-artifact@v4
       with:
         name: firmware-esp32s3
-        path: ./build/esp32_oled.ino.bin
+        path: ./build/tes.ino.bin
